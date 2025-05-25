@@ -4,3 +4,5 @@ In vitro cultures. Works in the following settings
 - Spike trains
 
 The enhanced version works on LFP.
+
+Currently working on recurrence plots...
