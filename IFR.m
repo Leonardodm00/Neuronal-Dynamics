@@ -19,11 +19,11 @@ Strings = [['012'],
 
 
 % Extract data
-% cd 'E:\Rec Linda\Dup15\Batch2\DIV35_6867\20240625_Control_00\Well_23\well_23_PeakDetectionMAT_PLP2ms_RP2ms\ptrain_Control00_Well23'
-cd ("C:\Users\Admin\Desktop\Leonardo\Neuronal Dynamic\Nuova cartella\ptrain_Control00_Well17\")
+cd 'C:\Users\Admin\Desktop\Leonardo\Neuronal Dynamic\Nuova cartella\ptrain_Group02_Well14'
+% cd ("C:\Users\Admin\Desktop\Leonardo\Neuronal Dynamic\Nuova cartella\ptrain_Control00_Well11\")
 
-base = 'ptrain_Control00_Well17_';
-% base = 'ptrain_Group02_Well17_';
+% base = 'ptrain_Control00_Well11_';
+base = 'ptrain_Group02_Well14_';
 Well = '11';
 t_rec = 600; % [s] Recording time
 fs = 10000;
@@ -41,7 +41,7 @@ bin_size_s = 0.05; % [s] 0.005 = 5 [ms]
 Isolate_NB = false;
 
 % Window size for smoothing
-Gaussian_window = 10 % [samples]
+Gaussian_window = 8; % [samples]
 
 % Extract data
 data = cell(length(Strings),1);
@@ -119,7 +119,10 @@ end
 
 
 
-[Variance_explained, Projected_trajectories,Coefficients,NB_IFR_PCA_mean] = get_PCA(IFR_smoothed_concatenated,IFR_smoothed);
+
+[Variance_explained, Projected_trajectories,Coefficients,NB_IFR_PCA_mean] = get_PCA(IFR_smoothed_concatenated,IFR_smoothed,Isolate_NB);
+
+writematrix(Projected_trajectories,'Projected_trajectories_Group02_14')
 
 
 
@@ -402,7 +405,7 @@ Velocity_mean = mean(Velocity_mean,1);
 end
 
 
-function [Variance_explained, Projected_trajectories,Coefficients,NB_IFR_PCA_mean]= get_PCA(NB_IFR_smoothed_concatenated,NB_IFR_smoothed)
+function [Variance_explained, Projected_trajectories,Coefficients,NB_IFR_PCA_mean]= get_PCA(NB_IFR_smoothed_concatenated,IFR_smoothed,Isolate_NB)
 
 
     % PCA(X) The rows of X correspond to observations, and the columns
@@ -423,78 +426,139 @@ function [Variance_explained, Projected_trajectories,Coefficients,NB_IFR_PCA_mea
 
 
    
+    if Isolate_NB == true
+
+        %In PCA function The rows of X correspond to observations, and the columns correspond to variables
+
+        NB_IFR_smoothed_concatenated_PCA = NB_IFR_smoothed_concatenated';
+        [Coefficients,~,~,~,Variance_explained,~]= pca(NB_IFR_smoothed_concatenated_PCA);
+        % 
+        
+        
+        %%% Obtain the mean traces
+        
+        
+        NB_IFR_PCA_mean_ = zeros(size(IFR_smoothed{1},1),size(IFR_smoothed{1},2),length(IFR_smoothed));
+        for k = 1:length(IFR_smoothed)
+            NB_IFR_PCA_= IFR_smoothed{k};
+            proj = NB_IFR_PCA_' * Coefficients;
+            NB_IFR_PCA_mean_(:,:,k) = proj';
+        
+        end
+        
+        NB_IFR_PCA_mean = mean(NB_IFR_PCA_mean_,3)';
+        
+        
+        
+        
+        % Project the data
+        Projected_trajectories = NB_IFR_smoothed_concatenated_PCA * Coefficients;
+        
+        
+        figure()
+    
+    
+        % Interpolate
+        row_len = 1:size(Projected_trajectories,1);
+    
+        
+    
+        % Extract the First three components
+        x = Projected_trajectories(:, 1);
+        y = Projected_trajectories(:, 2);
+        z = Projected_trajectories(:, 3);
+        
+        x_m = NB_IFR_PCA_mean(:,1);
+        y_m = NB_IFR_PCA_mean(:,2);
+        z_m = NB_IFR_PCA_mean(:,3);
+        
+        % Use the plot3 function to plot the lines connecting the points
+        plot3(x, y, z);
+        
+        hold on
+        
+        plot3(x_m, y_m, z_m,'LineWidth',4.5,'Color','red');
+        
+        
+        hold off
+        % Add labels and title for clarity
+        xlabel('PC 1');
+        ylabel('PC 2');
+        zlabel('PC 3');
+        title('Concatenated NBs');
+        
+        % You can customize the appearance of the lines
+        % For example, change the color, line style, and marker:
+        % plot3(x, y, z, 'r-o'); % Red solid line with circle markers at each point
+        % plot3(x, y, z, 'b--'); % Blue dashed line
+        
+        % To keep the axes scaled appropriately and prevent distortion
+        axis equal;
+        
+        % You can also add a grid
+        grid on;
+        
+        % To rotate the view interactively
+        rotate3d on;
 
 
-    NB_IFR_smoothed_concatenated_PCA = NB_IFR_smoothed_concatenated';
-    [Coefficients,~,~,~,Variance_explained,~]= pca(NB_IFR_smoothed_concatenated_PCA);
-    % 
+
+    else
+        %In PCA function The rows of X correspond to observations, and the columns correspond to variables
+       NB_IFR_PCA_mean = [];
+       [Coefficients,~,~,~,Variance_explained,~]= pca(IFR_smoothed);
+
+
+            % Project the data
+        Projected_trajectories = IFR_smoothed * Coefficients;
+        
+        
+        figure()
     
     
-    %%% Obtain the mean traces
+        
     
-    
-    NB_IFR_PCA_mean_ = zeros(size(NB_IFR_smoothed{1},1),size(NB_IFR_smoothed{1},2),length(NB_IFR_smoothed));
-    for k = 1:length(NB_IFR_smoothed)
-        NB_IFR_PCA_= NB_IFR_smoothed{k};
-        proj = NB_IFR_PCA_' * Coefficients;
-        NB_IFR_PCA_mean_(:,:,k) = proj';
-    
+        % Extract the First three components
+        x = Projected_trajectories(:, 1);
+        y = Projected_trajectories(:, 2);
+        z = Projected_trajectories(:, 3);
+        
+      
+        
+        % Use the plot3 function to plot the lines connecting the points
+        plot3(x, y, z);
+        
+   
+        
+
+        % Add labels and title for clarity
+        xlabel('PC 1');
+        ylabel('PC 2');
+        zlabel('PC 3');
+        title('Culture Dynamics');
+        
+        % You can customize the appearance of the lines
+        % For example, change the color, line style, and marker:
+        % plot3(x, y, z, 'r-o'); % Red solid line with circle markers at each point
+        % plot3(x, y, z, 'b--'); % Blue dashed line
+        
+        % To keep the axes scaled appropriately and prevent distortion
+        axis equal;
+        
+        % You can also add a grid
+        grid on;
+        
+        % To rotate the view interactively
+        rotate3d on;
+        
+
+
+
+
+
+
+
     end
-    
-    NB_IFR_PCA_mean = mean(NB_IFR_PCA_mean_,3)';
-    
-    
-    
-    
-    % Project the data
-    Projected_trajectories = NB_IFR_smoothed_concatenated_PCA * Coefficients;
-    
-    
-    figure()
-
-
-    % Interpolate
-    row_len = 1:size(Projected_trajectories,1);
-
-    
-
-    % Extract the First three components
-    x = Projected_trajectories(:, 1);
-    y = Projected_trajectories(:, 2);
-    z = Projected_trajectories(:, 3);
-    
-    x_m = NB_IFR_PCA_mean(:,1);
-    y_m = NB_IFR_PCA_mean(:,2);
-    z_m = NB_IFR_PCA_mean(:,3);
-    
-    % Use the plot3 function to plot the lines connecting the points
-    plot3(x, y, z);
-    
-    hold on
-    
-    plot3(x_m, y_m, z_m,'LineWidth',4.5,'Color','red');
-    
-    
-    hold off
-    % Add labels and title for clarity
-    xlabel('PC 1');
-    ylabel('PC 2');
-    zlabel('PC 3');
-    title('Concatenated NBs');
-    
-    % You can customize the appearance of the lines
-    % For example, change the color, line style, and marker:
-    % plot3(x, y, z, 'r-o'); % Red solid line with circle markers at each point
-    % plot3(x, y, z, 'b--'); % Blue dashed line
-    
-    % To keep the axes scaled appropriately and prevent distortion
-    axis equal;
-    
-    % You can also add a grid
-    grid on;
-    
-    % To rotate the view interactively
-    rotate3d on;
 
 end
 
@@ -642,7 +706,7 @@ function [IFR_smoothed,IFR_smoothed_concatenated] = Smoothed_IFR(IFR, bin_size,w
             subplot(2,1,1)
             
             for i = 1:size(IFR,2)
-                channel = IFR(:,2);
+                channel = IFR(:,i);
                 plot(channel);
         
         
@@ -652,12 +716,12 @@ function [IFR_smoothed,IFR_smoothed_concatenated] = Smoothed_IFR(IFR, bin_size,w
                 
             hold off
             title(sprintf('Raw IFR '));
-            xlabel('Time [s]')
+            xlabel('Samples')
             ylabel('Spikes')
         
             subplot(2,1,2)
             for i = 1:size(IFR_smoothed,2)
-                channel = IFR_smoothed(:,2);
+                channel = IFR_smoothed(:,i);
                 plot(channel);
         
         
