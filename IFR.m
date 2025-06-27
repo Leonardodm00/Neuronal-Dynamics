@@ -20,10 +20,10 @@ Strings = [['012'],
 
 % Extract data
 % cd 'E:\Rec Linda\Dup15\Batch2\DIV35_6867\20240625_Control_00\Well_23\well_23_PeakDetectionMAT_PLP2ms_RP2ms\ptrain_Control00_Well23'
-cd 'E:\Rec Linda\Dup15\Batch1\DIV35_5337\20240625_Group_02\Well_14\well_14_PeakDetectionMAT_PLP2ms_RP2ms\ptrain_Group02_Well14'
+cd ("C:\Users\Admin\Desktop\Leonardo\Neuronal Dynamic\Nuova cartella\ptrain_Control00_Well17\")
 
-% base = 'ptrain_Control00_Well23_';
-base = 'ptrain_Group02_Well14_';
+base = 'ptrain_Control00_Well17_';
+% base = 'ptrain_Group02_Well17_';
 Well = '11';
 t_rec = 600; % [s] Recording time
 fs = 10000;
@@ -110,10 +110,12 @@ end
 
 
 
-[IFR, bin_size,window_size] = Get_IFR(data,fs,Cumulative,t_vec,step_s,bin_size_s,T_vec,T_max);
+[IFR, bin_size,window_size] = Get_IFR(data,fs,Cumulative,t_vec,step_s,bin_size_s,Isolate_NB,T_max);
 
 
 [IFR_smoothed, IFR_smoothed_concatenated] = Smoothed_IFR(IFR, bin_size,window_size,fs,Isolate_NB,Gaussian_window,Visible);
+
+
 
 
 
@@ -641,7 +643,7 @@ function [IFR_smoothed,IFR_smoothed_concatenated] = Smoothed_IFR(IFR, bin_size,w
             
             for i = 1:size(IFR,2)
                 channel = IFR(:,2);
-                plot(T_vec/fs,channel);
+                plot(channel);
         
         
                 hold on
@@ -656,7 +658,7 @@ function [IFR_smoothed,IFR_smoothed_concatenated] = Smoothed_IFR(IFR, bin_size,w
             subplot(2,1,2)
             for i = 1:size(IFR_smoothed,2)
                 channel = IFR_smoothed(:,2);
-                plot(T_vec/fs,channel);
+                plot(channel);
         
         
                 hold on
